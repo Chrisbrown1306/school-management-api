@@ -1,0 +1,197 @@
+{
+  "info": {
+    "name": "School Management API",
+    "_postman_id": "school-mgmt-collection-v1",
+    "description": "Complete collection for the School Management API.\n\n**Setup:**\n1. Make sure the server is running (`npm start`)\n2. Set the `baseUrl` variable to `http://localhost:3000`\n3. Run requests in order",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        },
+        "description": "Confirms the server is up and lists available endpoints."
+      },
+      "response": [
+        {
+          "name": "Server is running",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"School Management API is running 🎓\",\n  \"endpoints\": {\n    \"addSchool\": \"POST /addSchool\",\n    \"listSchools\": \"GET  /listSchools?latitude=<lat>&longitude=<lon>\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Add School – Success",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sunrise International School\",\n  \"address\": \"42 MG Road, Pune, Maharashtra 411001\",\n  \"latitude\": 18.5204,\n  \"longitude\": 73.8567\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/addSchool",
+          "host": ["{{baseUrl}}"],
+          "path": ["addSchool"]
+        },
+        "description": "Adds a new school. All four fields are required.\n\n**Expected response:** 201 Created with the new school's id."
+      },
+      "response": [
+        {
+          "name": "201 – School added",
+          "status": "Created",
+          "code": 201,
+          "body": "{\n  \"success\": true,\n  \"message\": \"School added successfully.\",\n  \"data\": {\n    \"id\": 6,\n    \"name\": \"Sunrise International School\",\n    \"address\": \"42 MG Road, Pune, Maharashtra 411001\",\n    \"latitude\": 18.5204,\n    \"longitude\": 73.8567\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Add School – Validation Error (missing fields)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"\",\n  \"address\": \"Some Road\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/addSchool",
+          "host": ["{{baseUrl}}"],
+          "path": ["addSchool"]
+        },
+        "description": "Demonstrates validation — missing/empty name, and missing lat/lon.\n\n**Expected response:** 400 Bad Request with a list of errors."
+      },
+      "response": [
+        {
+          "name": "400 – Validation errors",
+          "status": "Bad Request",
+          "code": 400,
+          "body": "{\n  \"success\": false,\n  \"errors\": [\n    \"'name' is required and must be a non-empty string.\",\n    \"'latitude' is required.\",\n    \"'longitude' is required.\"\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Add School – Validation Error (bad coordinates)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test School\",\n  \"address\": \"Test Address\",\n  \"latitude\": 999,\n  \"longitude\": -999\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/addSchool",
+          "host": ["{{baseUrl}}"],
+          "path": ["addSchool"]
+        },
+        "description": "Latitude must be –90 to 90, longitude –180 to 180.\n\n**Expected response:** 400 Bad Request."
+      },
+      "response": [
+        {
+          "name": "400 – Invalid coordinates",
+          "status": "Bad Request",
+          "code": 400,
+          "body": "{\n  \"success\": false,\n  \"errors\": [\n    \"'latitude' must be a number between -90 and 90.\",\n    \"'longitude' must be a number between -180 and 180.\"\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "List Schools – Sorted by Distance",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/listSchools?latitude=18.5204&longitude=73.8567",
+          "host": ["{{baseUrl}}"],
+          "path": ["listSchools"],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "18.5204",
+              "description": "User's current latitude (Pune)"
+            },
+            {
+              "key": "longitude",
+              "value": "73.8567",
+              "description": "User's current longitude (Pune)"
+            }
+          ]
+        },
+        "description": "Returns all schools sorted from closest → farthest relative to the provided coordinates.\n\nEach school in the response includes a `distance_km` field."
+      },
+      "response": [
+        {
+          "name": "200 – Sorted school list",
+          "status": "OK",
+          "code": 200,
+          "body": "{\n  \"success\": true,\n  \"message\": \"Found 6 school(s), sorted by distance from (18.5204, 73.8567).\",\n  \"data\": [\n    {\n      \"id\": 6,\n      \"name\": \"Sunrise International School\",\n      \"address\": \"42 MG Road, Pune, Maharashtra 411001\",\n      \"latitude\": 18.5204,\n      \"longitude\": 73.8567,\n      \"distance_km\": 0\n    },\n    {\n      \"id\": 4,\n      \"name\": \"The Cathedral School\",\n      \"address\": \"CST Road, Kalina, Mumbai, Maharashtra 400098\",\n      \"latitude\": 19.0728,\n      \"longitude\": 72.8826,\n      \"distance_km\": 148.67\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "List Schools – Validation Error (missing params)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/listSchools",
+          "host": ["{{baseUrl}}"],
+          "path": ["listSchools"]
+        },
+        "description": "Called without latitude/longitude query params.\n\n**Expected response:** 400 Bad Request."
+      },
+      "response": [
+        {
+          "name": "400 – Missing query params",
+          "status": "Bad Request",
+          "code": 400,
+          "body": "{\n  \"success\": false,\n  \"errors\": [\n    \"Query param 'latitude' is required.\",\n    \"Query param 'longitude' is required.\"\n  ]\n}"
+        }
+      ]
+    }
+  ]
+}
